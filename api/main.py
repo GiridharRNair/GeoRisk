@@ -1,29 +1,23 @@
+from fastapi import FastAPI, HTTPException
 import requests
-import json
+import os
+from dotenv import load_dotenv
 
-FEMA_API_URL = "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries"
+load_dotenv()
 
+app = FastAPI()
 
-def get_disaster_data(county, state_code):
-    """Query FEMA API for disaster data based on county and state."""
-    params = {
-        "state": state_code,
-        "designatedArea": county,
-        "limit": 1  # Limit for testing; adjust as needed
-    }
-    response = requests.get(FEMA_API_URL, params=params)
-    if response.status_code != 200:
-        print("Error with FEMA API:", response.json())
-        return None
+def risk_data(lat: float, lon: float):
+    try:
+        response = requests.get(
+            f"https://api.lightboxre.com/v1/riskindexes/us/geometry?wkt=POINT%28{lon}%20{lat}%29&bufferDistance=50&bufferUnit=m",
+            headers={"x-api-key": os.getenv("LIGHTBOX_APIKEY")}
+        )
+        response.raise_for_status()  
+        return response.json()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return response.json()
-
-
-try:
-    disaster_data = get_disaster_data("Collin", "TX")
-    if disaster_data is not None:
-        with open("data.json", "w") as f:
-            json.dump(disaster_data, f, indent=4)  # Indent for readability
-            print("Disaster data written to data.json")
-except Exception as e:
-    print(f"An error occurred: {e}")
+@app.get("/api/risk")
+def get_risk(lat: float, lon: float):
+    return risk_data(lat, lon)

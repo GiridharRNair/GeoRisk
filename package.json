@@ -4,17 +4,24 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "api": "fastapi dev api/main.py",
+        "dev": "concurrently \"npm run api\" \"vite\"",
         "build": "vite build",
         "lint": "eslint .",
         "preview": "vite preview",
         "format": "prettier --write . --tab-width 4 --print-width 160"
     },
     "dependencies": {
+        "@chakra-ui/react": "^3.1.0",
+        "@emotion/react": "^11.13.3",
+        "@mapbox/mapbox-gl-geocoder": "^5.0.3",
         "@types/mapbox-gl": "^3.4.1",
+        "concurrently": "^9.1.0",
         "mapbox-gl": "^3.7.0",
+        "next-themes": "^0.4.3",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "react-icons": "^5.3.0",
         "react-map-gl": "^7.1.7"
     },
     "devDependencies": {
@@ -28,6 +35,7 @@
         "eslint-plugin-react-refresh": "^0.4.14",
         "globals": "^15.11.0",
         "prettier": "^3.3.3",
-        "vite": "^5.4.10"
+        "vite": "^5.4.10",
+        "vite-tsconfig-paths": "^5.1.1"
     }
 }
