@@ -62,6 +62,9 @@ def risk_data(lat: float, lon: float):
 
 @app.get("/api/risk")
 def get_risk(lat: float, lon: float):
-    data = risk_data(lat, lon)
-    cleaned_data = clean_json(data)
-    return cleaned_data
+    try:
+        data = risk_data(lat, lon)
+        cleaned_data = clean_json(data)
+        return cleaned_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

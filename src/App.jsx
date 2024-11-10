@@ -8,6 +8,7 @@ import { ProgressCircleRing, ProgressCircleRoot, ProgressCircleValueText } from 
 import Map from "react-map-gl";
 import GeocoderControl from "@/components/geocoder-control";
 import { Users } from "lucide-react";
+import { toaster } from "@/components/ui/toaster"
 
 const mapBoxAPIKey = import.meta.env.VITE_MAP_BOX_API_KEY;
 const backendURL = import.meta.env.VITE_BACKEND_API_URL;
@@ -57,10 +58,27 @@ function App() {
     const fetchRiskData = async (lat, lon) => {
         try {
             const response = await fetch(`${backendURL}/api/risk?lat=${lat}&lon=${lon}`);
+            if (!response.ok) {
+                toaster.create({
+                    title: "Error fetching risk data",
+                    description: "An error occurred while fetching risk data. Please try again later.",
+                    status: "error",
+                    duration: 5000,
+                    zIndex: 9999,
+                });
+                return;
+            }
             const data = await response.json();
             setRiskData(data);
             setShowRiskData(true);
         } catch (error) {
+            toaster.create({
+                title: "Error fetching risk data",
+                description: "An error occurred while fetching risk data. Please try again later.",
+                status: "error",
+                duration: 5000,
+                zIndex: 9999,
+            });
             console.error("Error fetching risk data:", error);
         }
     };
@@ -95,7 +113,7 @@ function App() {
                     <GeocoderControl mapboxAccessToken={mapBoxAPIKey} position="top-left" />
                 </Map>
 
-                <Box position="absolute" top="10px" right="10px" backgroundColor="rgba(0, 0, 0, 0.5)" padding="10px" borderRadius="8px" zIndex={1}>
+                <Box position="absolute" top="10px" right="10px" backgroundColor="rgba(0, 0, 0, 0.5)" padding="10px" borderRadius="8px" zIndex={1} color={"white"}>
                     <DataListRoot orientation={"horizontal"} colorPalette={"pink"}>
                         <DataListItem label={"Latitude"} value={coordinates.latitude.toFixed(4)} />
                         <DataListItem label={"Longitude"} value={coordinates.longitude.toFixed(4)} />
@@ -121,12 +139,12 @@ function App() {
                     backdropFilter="blur(8px)"
                     backgroundColor="rgba(23, 25, 35, 0.95)"
                 >
-                    <CloseButton onClick={() => setShowRiskData(false)} position="absolute" top={4} right={4} />
+                    <CloseButton onClick={() => setShowRiskData(false)} position="absolute" top={4} right={4} colorPalette={'red'}/>
 
                     <VStack spacing={6}>
                         <Box textAlign="center" pb={3}>
                             <Text fontSize="3xl" fontWeight="bold" mb={2}>
-                                {riskData.county}, {riskData.state}
+                                County: {riskData.county} | State: {riskData.state}
                             </Text>
                             <Text color="gray.400">Risk Assessment Dashboard</Text>
                         </Box>
@@ -137,7 +155,7 @@ function App() {
                                     <Users size={24} color="#63B3ED" />
                                 </Box>
                                 <Text color="gray.400" fontSize="sm">
-                                    Population
+                                    Population (50 meters)
                                 </Text>
                                 <Text fontSize="xl" fontWeight="semibold">
                                     {riskData.population?.toLocaleString()}
