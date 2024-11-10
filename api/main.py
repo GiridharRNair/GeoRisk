@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 import os
 from dotenv import load_dotenv
@@ -6,6 +7,47 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+def clean_json(data):
+    cleaned_data = {}
+    
+    nris_data = data.get("nris", [{}])[0] 
+
+    cleaned_data["state"] = nris_data.get("state")
+    cleaned_data["county"] = nris_data.get("county")
+    cleaned_data["population"] = nris_data.get("population")
+    
+    social_vulnerability = nris_data.get("socialVulnerability", {})
+    cleaned_data["socialVulnerability"] = social_vulnerability.get("score")
+
+    community_resilience = nris_data.get("communityResilience", {})
+    cleaned_data["communityResilience"] = community_resilience.get("score")
+
+    hazard_types = [
+        "avalanche", "coastalFlooding", "coldWave", "drought", "earthquake",
+        "hail", "heatWave", "hurricane", "iceStorm", "landslide", "lightning",
+        "riverineFlooding", "strongWind", "tornado", "tsunami", "volcanicActivity",
+        "wildfire", "winterWeather"
+    ]
+    
+    for hazard in hazard_types:
+        hazard_info = nris_data.get(hazard, {})
+        cleaned_data[hazard] = {
+            "events": hazard_info.get("events"),
+            "annualizedFrequency": hazard_info.get("annualizedFrequency"),
+            "annualLoss": hazard_info.get("annualLoss", {}).get("total"),
+            "hazardTypeRiskScore": hazard_info.get("hazardTypeRiskIndex", {}).get("score"),
+        }
+
+    return cleaned_data
 
 def risk_data(lat: float, lon: float):
     try:
@@ -20,4 +62,6 @@ def risk_data(lat: float, lon: float):
 
 @app.get("/api/risk")
 def get_risk(lat: float, lon: float):
-    return risk_data(lat, lon)
+    data = risk_data(lat, lon)
+    cleaned_data = clean_json(data)
+    return cleaned_data
