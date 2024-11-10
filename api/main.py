@@ -68,3 +68,7 @@ def get_risk(lat: float, lon: float):
         return cleaned_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
